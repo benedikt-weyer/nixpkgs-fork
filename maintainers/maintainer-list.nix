@@ -3315,6 +3315,12 @@
     githubId = 214787;
     name = "Herwig Hochleitner";
   };
+  "benedikt-weyer" = {
+    name = "Benedikt Weyer";
+    email = "bw.development@pm.me";
+    github = "benedikt-weyer";
+    githubId = 105204092;
+  };
   benediktbroich = {
     name = "Benedikt Broich";
     email = "b.broich@posteo.de";

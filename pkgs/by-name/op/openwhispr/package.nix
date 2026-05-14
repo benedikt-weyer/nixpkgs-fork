@@ -49,6 +49,7 @@ appimageTools.wrapType2 {
     license = lib.licenses.mit;
     sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
     mainProgram = "openwhispr";
+    maintainers = [ lib.maintainers."benedikt-weyer" ];
     platforms = [ "x86_64-linux" ];
   };
 }
