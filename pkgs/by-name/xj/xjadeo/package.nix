@@ -10,6 +10,7 @@
   liblo,
   libx11,
   libxv,
+  llvmPackages,
   pkg-config,
   portmidi,
   libxpm,
@@ -30,7 +31,9 @@ stdenv.mkDerivation (finalAttrs: {
   nativeBuildInputs = [
     autoreconfHook
     pkg-config
-  ];
+  ]
+  # TODO: Remove once #536365 reaches this branch
+  ++ lib.optional stdenv.hostPlatform.isDarwin llvmPackages.lld;
 
   buildInputs = [
     ffmpeg
@@ -46,9 +49,16 @@ stdenv.mkDerivation (finalAttrs: {
     freetype
     libGLU
     liblo
-    libxv
     portmidi
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
+    libxv
   ];
+
+  # TODO: Remove once #536365 reaches this branch
+  env = lib.optionalAttrs stdenv.hostPlatform.isDarwin {
+    NIX_CFLAGS_LINK = "-fuse-ld=lld";
+  };
 
   meta = {
     description = "X Jack Video Monitor";
@@ -60,7 +70,7 @@ stdenv.mkDerivation (finalAttrs: {
     '';
     homepage = "https://xjadeo.sourceforge.net";
     license = lib.licenses.gpl2Plus;
-    platforms = lib.platforms.linux;
+    platforms = lib.platforms.linux ++ lib.platforms.darwin;
     maintainers = with lib.maintainers; [ mitchmindtree ];
   };
 })

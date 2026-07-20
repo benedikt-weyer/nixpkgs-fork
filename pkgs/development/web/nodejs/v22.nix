@@ -23,8 +23,8 @@ let
       [ ];
 in
 buildNodejs {
-  version = "22.22.3";
-  sha256 = "f3e6a578db1ab335a4a72785c1e87ad18a2cf6d2fc25747a1d741fb34af0bd0f";
+  version = "22.23.1";
+  sha256 = "b27385d6845089bdb91285d94b06c2a5cf1c37f8173a3c4e10824cc1ffadeaba";
   patches =
     (
       if (stdenv.hostPlatform.emulatorAvailable buildPackages) then
@@ -63,13 +63,6 @@ buildNodejs {
       (fetchpatch2 {
         url = "https://github.com/nodejs/node/commit/ff3a028f8bf88da70dc79e1d7b7947a8d5a8548a.patch?full_index=1";
         hash = "sha256-LJcO3RXVPnpbeuD87fiJ260m3BQXNk3+vvZkBMFUz5w=";
-      })
-      # update tests for nghttp2 1.65
-      ./deprecate-http2-priority-signaling.patch
-      (fetchpatch2 {
-        url = "https://github.com/nodejs/node/commit/a63126409ad4334dd5d838c39806f38c020748b9.diff?full_index=1";
-        hash = "sha256-lfq8PMNvrfJjlp0oE3rJkIsihln/Gcs1T/qgI3wW2kQ=";
-        includes = [ "test/*" ];
       })
     ];
 }

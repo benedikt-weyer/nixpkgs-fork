@@ -1,8 +1,9 @@
 {
   lib,
   callPackage,
-  crystal_1_16,
+  crystal,
   fetchFromGitHub,
+  fetchpatch2,
   librsvg,
   pkg-config,
   libxml2,
@@ -27,11 +28,11 @@
 let
   # normally video.js is downloaded at build time
   videojs = callPackage ./videojs.nix { inherit versions; };
-  crystal = crystal_1_16;
 in
 crystal.buildCrystalPackage rec {
   pname = "invidious";
   inherit (versions.invidious) version;
+  __structuredAttrs = true;
 
   src = fetchFromGitHub {
     owner = "iv-org";
@@ -40,6 +41,15 @@ crystal.buildCrystalPackage rec {
     rev = versions.invidious.rev or "refs/tags/v${version}";
     inherit (versions.invidious) hash;
   };
+
+  patches = [
+    # Remove with the first release containing this commit.
+    (fetchpatch2 {
+      name = "CVE-2026-58447.patch";
+      url = "https://github.com/iv-org/invidious/commit/77ad41678b45c4f6815940123f1796fc51259f45.patch?full_index=1";
+      hash = "sha256-0pf6eu0ckQ2gYHLr2tEDy+1dvAhVjepG26kuxuHbZl8=";
+    })
+  ];
 
   postPatch =
     let
@@ -69,7 +79,7 @@ crystal.buildCrystalPackage rec {
 
       # Patch the assets and locales paths to be absolute
       substituteInPlace src/invidious.cr \
-          --replace-fail 'public_folder "assets"' 'public_folder "${placeholder "out"}/share/invidious/assets"'
+          --replace-fail 'StaticAssetsHandler.new("assets"' 'StaticAssetsHandler.new("${placeholder "out"}/share/invidious/assets"'
       substituteInPlace src/invidious/helpers/i18n.cr \
           --replace-fail 'File.read("locales/' 'File.read("${placeholder "out"}/share/invidious/locales/'
 

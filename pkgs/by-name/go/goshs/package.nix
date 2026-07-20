@@ -8,16 +8,16 @@
 
 buildGoModule (finalAttrs: {
   pname = "goshs";
-  version = "2.0.7";
+  version = "2.1.4";
 
   src = fetchFromGitHub {
-    owner = "patrickhener";
+    owner = "goshs-labs";
     repo = "goshs";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-Z8QYwMrYa/u67oT+SQdtpvUrVUt9fM1RC9gjjU/rH2s=";
+    hash = "sha256-8xSYdLO+2AB044sV3JJw0RXB0RuLQ7eIzWvwgoJdp5k=";
   };
 
-  vendorHash = "sha256-3+MGBaFWmMf2gDiZhYUxHFNmEfD/Xr1lNddlA5FQLUE=";
+  vendorHash = "sha256-yKNJHs6A7Du9NvGOpwaDmABz6SBMPVzJNoQb7W32IfA=";
 
   ldflags = [ "-s" ];
 
@@ -43,7 +43,7 @@ buildGoModule (finalAttrs: {
   meta = {
     description = "Simple, yet feature-rich web server written in Go";
     homepage = "https://goshs.de";
-    changelog = "https://github.com/patrickhener/goshs/releases/tag/${finalAttrs.src.rev}";
+    changelog = "https://github.com/goshs-labs/goshs/releases/tag/${finalAttrs.src.rev}";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [
       fab

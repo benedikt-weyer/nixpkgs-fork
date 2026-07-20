@@ -27,7 +27,11 @@ let
         --replace-fail /bin/sh ${runtimeShell}
     '';
 
-    propagatedBuildInputs = with python3Packages; [ xlib ];
+    propagatedBuildInputs = with python3Packages; [
+      python-xlib
+      pygobject3.out
+      dbus-python.out
+    ];
 
     dontBuild = true;
 

@@ -61,6 +61,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     # isn't patched for Nix. Disable it at source.
     substituteInPlace packages/desktop/src/main/constants.ts \
       --replace-fail 'app.isPackaged && CHANNEL !== "dev"' 'false'
+
+    # Relax Bun version check to be a warning instead of an error
+    substituteInPlace packages/script/src/index.ts \
+      --replace-fail 'throw new Error(`This script requires bun@''${expectedBunVersionRange}' \
+                     'console.warn(`Warning: This script requires bun@''${expectedBunVersionRange}'
   '';
 
   configurePhase = ''
@@ -71,6 +76,18 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     patchShebangs packages/*/node_modules
 
     runHook postConfigure
+  '';
+
+  preBuild = lib.optionalString stdenvNoCC.hostPlatform.isDarwin ''
+    # Patch electron-builder to skip code signing on macOS.
+    # The nix sandbox on public Darwin builders cannot spawn
+    # `security find-identity` — trying gives spawn EPERM.
+    # We patch the compiled JS to make getValidIdentities a no-op.
+    for f in $(find node_modules -path "*/app-builder-lib/out/codeSign/macCodeSign.js" -type f 2>/dev/null); do
+      substituteInPlace "$f" \
+        --replace-fail "async function getValidIdentities" \
+        "async function getValidIdentities() { return []; }; async function getValidIdentities_DISABLED"
+    done
   '';
 
   buildPhase = ''
@@ -98,7 +115,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       --config=electron-builder.config.ts \
       --config.electronDist="$HOME/.electron-dist" \
       --config.electronVersion=${electron.version} \
-      --config.asarUnpack='**/*.node'
+      --config.asarUnpack='**/*.node' \
+      ${lib.optionalString stdenvNoCC.hostPlatform.isDarwin "--config.mac.identity=null"}
 
     cd ../..
 
@@ -106,11 +124,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   '';
 
   desktopItems = lib.optional stdenvNoCC.hostPlatform.isLinux (makeDesktopItem {
-    name = "opencode-desktop";
+    name = "ai.opencode.desktop";
     desktopName = "OpenCode";
     exec = "opencode-desktop %U";
     icon = "opencode-desktop";
-    startupWMClass = "OpenCode";
+    startupWMClass = "ai.opencode.desktop";
     categories = [ "Development" ];
     mimeTypes = [ "x-scheme-handler/opencode" ];
   });
@@ -126,7 +144,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       (lib.optionalString stdenvNoCC.hostPlatform.isDarwin ''
         mkdir -p $out/Applications $out/bin
         mv packages/desktop/dist/mac-*/OpenCode.app "$out/Applications/OpenCode.app"
-        ln -s "$out/Applications/OpenCode.app/Contents/MacOS/OpenCode" $out/bin/OpenCode
+        ln -s "$out/Applications/OpenCode.app/Contents/MacOS/OpenCode" $out/bin/opencode-desktop
       '')
       (lib.optionalString stdenvNoCC.hostPlatform.isLinux ''
         mkdir -p $out/opt/opencode-desktop
@@ -160,9 +178,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   meta = {
     description = "AI coding agent desktop client";
     homepage = "https://opencode.ai";
-    inherit (opencode.meta) platforms;
+    inherit (opencode.meta) changelog platforms;
     license = lib.licenses.mit;
-    mainProgram = if stdenvNoCC.hostPlatform.isDarwin then "OpenCode" else "opencode-desktop";
+    mainProgram = "opencode-desktop";
     maintainers = with lib.maintainers; [ xiaoxiangmoe ];
   };
 })
