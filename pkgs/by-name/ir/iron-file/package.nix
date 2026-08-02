@@ -2,8 +2,15 @@
   lib,
   fetchFromGitHub,
   libGL,
+  libX11,
+  libXcursor,
+  libXi,
+  libXrandr,
+  libXrender,
   libxkbcommon,
+  copyDesktopItems,
   makeWrapper,
+  makeDesktopItem,
   rustPlatform,
   vulkan-loader,
   wayland,
@@ -16,8 +23,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   src = fetchFromGitHub {
     owner = "benedikt-weyer";
     repo = "iron-file";
-    rev = "ac26d99f2761043378f23ed77b829761e7261664";
-    hash = "sha256-TGFFBxlzbEuudH6+tiPbI48Un9sTUVjLsHbKPw1ZO3s=";
+    rev = "4f2d099d411254a3ad0890222d3280e236394ebf";
+    hash = "sha256-LEZBwGCmdcpR/fh2CVcjef51RxicTo9zABf71ZiknmU=";
   };
 
   cargoHash = "sha256-WnViXYDX2xq3qlXS+c0OcwWgOWWrc65MIhUHLafDTaE=";
@@ -29,11 +36,31 @@ rustPlatform.buildRustPackage (finalAttrs: {
     "iron-file-backend"
   ];
 
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [
+    copyDesktopItems
+    makeWrapper
+  ];
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "iron-file";
+      desktopName = "Iron File";
+      comment = "File browser";
+      exec = "iron-file-iced";
+      icon = "iron-file";
+      categories = [
+        "System"
+        "FileManager"
+      ];
+      mimeTypes = [ "inode/directory" ];
+    })
+  ];
 
   postInstall = ''
     install -Dm755 "$out/bin/iron-file-backend" \
       "$out/libexec/iron-file/iron-file-backend"
+    install -Dm644 ${finalAttrs.src}/assets/iron-file.svg \
+      "$out/share/icons/hicolor/scalable/apps/iron-file.svg"
     rm "$out/bin/iron-file-backend"
   '';
 
@@ -41,12 +68,19 @@ rustPlatform.buildRustPackage (finalAttrs: {
     wrapProgram "$out/bin/iron-file-iced" \
       --set IRON_FILE_BACKEND_MODE prod \
       --set IRON_FILE_BACKEND_BIN "$out/libexec/iron-file/iron-file-backend" \
-      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [
-        libGL
-        libxkbcommon
-        vulkan-loader
-        wayland
-      ]}"
+      --prefix LD_LIBRARY_PATH : "${
+        lib.makeLibraryPath [
+          libGL
+          libX11
+          libXcursor
+          libXi
+          libXrandr
+          libXrender
+          libxkbcommon
+          vulkan-loader
+          wayland
+        ]
+      }"
   '';
 
   doCheck = false;
